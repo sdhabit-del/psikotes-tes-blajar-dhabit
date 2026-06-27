@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Psikotes Masuk SMA</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 650px;
+        }
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #2a75d3;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .question-box {
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .visual-pattern {
+            font-family: monospace;
+            font-size: 1.8rem;
+            background: #f7f9fa;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            border: 2px dashed #cbd5e1;
+            margin-bottom: 15px;
+            letter-spacing: 5px;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-btn {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 14px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-btn:hover {
+            background-color: #edf2f7;
+            border-color: #cbd5e1;
+        }
+        .footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .score-board {
+            text-align: center;
+        }
+        .score-board h2 {
+            color: #2a75d3;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        .restart-btn {
+            background-color: #2a75d3;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto 0;
+        }
+        .restart-btn:hover {
+            background-color: #1e5cb3;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Psikotes Masuk SMA</h1>
+    
+    <!-- Halaman Kuis -->
+    <div id="quiz-screen">
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div class="question-box">
+            <div id="question-number" style="color: #64748b; font-weight: bold; margin-bottom: 5px;">Soal 1 dari 30</div>
+            <div class="question-text" id="question-text">Memuat soal...</div>
+            <div id="visual-area" class="visual-pattern hidden"></div>
+        </div>
+        <div class="options-container" id="options-container">
+            <!-- Pilihan jawaban akan muncul di sini -->
+        </div>
+    </div>
+
+    <!-- Halaman Hasil / Koreksi -->
+    <div id="result-screen" class="hidden">
+        <div class="score-board">
+            <h2>Latihan Selesai!</h2>
+            <p style="font-size: 1.2rem;">Skor Kamu:</p>
+            <div id="final-score" style="font-size: 3rem; font-weight: bold; color: #10b981; margin: 10px 0;">0 / 30</div>
+            <p id="score-comment" style="color: #4b5563; font-weight: 500;"></p>
+            <button class="restart-btn" onclick="ulangKuis()">Coba Lagi</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data 30 Soal Psikotes Campuran (Verbal, Logika, Matematika/Deret, Gambar Karakter)
+    const daftarSoal = [
+        // --- VERBAL (1-8) ---
+        { q: "Mobil : Bensin = Pelari : ...", options: ["Sepatu", "Makanan", "Lintasan", "Kaos"], correct: 1 },
+        { q: "Khayalan : Fakta = Dongeng : ...", options: ["Realita", "Cerita", "Palsu", "Mitos"], correct: 0 },
+        { q: "Konstitusi berhubungan dengan Undang-Undang, sebagaimana Wahyu berhubungan dengan...", options: ["Alkitab/Kitab Suci", "Nabi", "Firman", "Malaikat"], correct: 0 },
+        { q: "Carilah sinonim (persamaan kata) dari: PROTES", options: ["Setuju", "Sanggahan", "Dukungan", "Kepatuhan"], correct: 1 },
+        { q: "Carilah sinonim (persamaan kata) dari: REVENUE", options: ["Pengeluaran", "Modal", "Pendapatan", "Pajak"], correct: 2 },
+        { q: "Carilah antonim (lawan kata) dari: KHAS", options: ["Simbiosis", "Eksklusif", "Umum", "Berbeda"], correct: 2 },
+        { q: "Carilah antonim (lawan kata) dari: SEKEJAP", options: ["Lama", "Sebentar", "Kilat", "Mendadak"], correct: 0 },
+        { q: "Kakak Tua : Burung = Gurita : ...", options: ["Laut", "Insang", "Moluska/Hewan Lunak", "Ikan"], correct: 2 },
+
+        // --- MATEMATIKA LOGIKA & DERET (9-18) ---
+        { q: "Lanjutkan deret angka ini: 2, 4, 8, 16, ...", options: ["20", "24", "32", "64"], correct: 2 },
+        { q: "Lanjutkan deret angka ini: 5, 10, 15, 20, ...", options: ["22", "25", "30", "35"], correct: 1 },
+        { q: "Lanjutkan deret angka ini: 100, 90, 80, 70, ...", options: ["65", "60", "50", "40"], correct: 1 },
+        { q: "Lanjutkan deret angka ini: 1, 3, 6, 10, ...", options: ["12", "14", "15", "18"], correct: 2 },
+        { q: "Jika x = 5 dan y = 7, berapakah nilai dari 2x + y?", options: ["17", "19", "24", "12"], correct: 0 },
+        { q: "Sebuah toko memberikan diskon 20%. Jika harga baju Rp 100.000, berapa harga setelah diskon?", options: ["Rp 90.000", "Rp 80.000", "Rp 70.000", "Rp 20.000"], correct: 1 },
+        { q: "Lanjutkan deret huruf ini: A, C, E, G, ...", options: ["H", "I", "J", "K"], correct: 1 },
+        { q: "Jika 5 kucing bisa menangkap 5 tikus dalam 5 menit, berapa waktu yang dibutuhkan 100 kucing untuk menangkap 100 tikus?", options: ["100 menit", "50 menit", "25 menit", "5 menit"], correct: 3 },
+        { q: "Sebuah proyek selesai dalam 12 hari oleh 4 orang. Jika dikerjakan oleh 8 orang, berapa hari proyek akan selesai?", options: ["24 hari", "6 hari", "3 hari", "8 hari"], correct: 1 },
+        { q: "Berapakah 1/2 dari 2/4?", options: ["1/4", "1/2", "1/8", "1"], correct: 0 },
+
+        // --- LOGIKA & POLA GAMBAR KARAKTER (19-30) ---
+        { q: "Pola Karakter: Tentukan bentuk selanjutnya dari pola ini:", visual: "▲  ▼  ▲  ▼  ?", options: ["▲", "▼", "◄", "►"], correct: 0 },
+        { q: "Pola Karakter: Tentukan bentuk selanjutnya dari pola ini:", visual: "○  ○○  ○○○  ?", options: ["○", "○○", "○○○○", "◌"], correct: 2 },
+        { q: "Pola Karakter: Perhatikan arah panah berikut:", visual: "↑  →  ↓  ←  ?", options: ["↓", "←", "↑", "→"], correct: 2 },
+        { q: "Pola Karakter: Cari yang polanya berbeda sendiri:", visual: "[A] +   [B] x   [C] #   [D] 4", options: ["[A]", "[B]", "[C]", "[D] (Karena angka sendiri)"], correct: 3 },
+        { q: "Pola Karakter: Lengkapi deret simbol ini:", visual: "■□  ■■□  ■■■□  ?", options: ["■■■■", "■■■■□", "□□□■", "■□■□"], correct: 1 },
+        { q: "Pola Karakter: Putaran arah jarum jam:", visual: "↖  ↑  ↗  ?", options: ["→", "↓", "←", "↖"], correct: 0 },
+        { q: "Pola Karakter: Tentukan kelanjutan susunan kotak ini:", visual: "⚀  ⚁  ⚂  ?", options: ["⚃", "⚄", "⚅", "⚀"], correct: 0 },
+        { q: "Pola Karakter: Cari kelanjutan dari kombinasi ini:", visual: "A1  B2  C3  ?", options: ["D3", "E4", "D4", "C4"], correct: 2 },
+        { q: "Pola Karakter: Perhatikan perubahan tanda strip:", visual: "---|  --|-  -|--  ?", options: ["|---", "---|", "--|-", "-|--"], correct: 0 },
+        { q: "Pola Karakter: Mana karakter yang paling berbeda bentuk?", visual: "[A] █  [B] ▄  [C] ▌  [D] ●", options: ["[A]", "[B]", "[C]", "[D] (Karena lingkaran sendiri)"], correct: 3 },
+        { q: "Pola Karakter: Lengkapi bagian kosong berikut:", visual: "★☆★  ☆★☆  ★☆★  ?", options: ["★★★", "☆☆☆", "☆★☆", "★☆★"], correct: 2 },
+        { q: "Pola Karakter: Manakah simbol yang melambangkan tanda silang sempurna?", visual: "[A] +  [B] ×  [C] ÷  [D] ≠", options: ["[A]", "[B]", "[C]", "[D]"], correct: 1 }
+    ];
+
+    let indeksSekarang = 0;
+    let totalSkor = 0;
+
+    const screenQuiz = document.getElementById('quiz-screen');
+    const screenResult = document.getElementById('result-screen');
+    const txtQuestionNumber = document.getElementById('question-number');
+    const txtQuestion = document.getElementById('question-text');
+    const areaVisual = document.getElementById('visual-area');
+    const containerOptions = document.getElementById('options-container');
+    const barProgress = document.getElementById('progress');
+    const txtFinalScore = document.getElementById('final-score');
+    const txtComment = document.getElementById('score-comment');
+
+    function tampilkanSoal() {
+        if (indeksSekarang >= daftarSoal.length) {
+            selesaiKuis();
+            return;
+        }
+
+        // Update Progress Bar
+        let persenProgress = (indeksSekarang / daftarSoal.length) * 100;
+        barProgress.style.width = persenProgress + '%';
+
+        // Ambil data soal
+        let soalAktif = daftarSoal[indeksSekarang];
+        txtQuestionNumber.innerText = `Soal ${indeksSekarang + 1} dari ${daftarSoal.length}`;
+        txtQuestion.innerText = soalAktif.q;
+
+        // Tampilkan visual pendukung jika ada soal tipe gambar karakter
+        if (soalAktif.visual) {
+            areaVisual.innerText = soalAktif.visual;
+            areaVisual.classList.remove('hidden');
+        } else {
+            areaVisual.classList.add('hidden');
+        }
+
+        // Kosongkan dan buat tombol pilihan baru
+        containerOptions.innerHTML = '';
+        soalAktif.options.forEach((opsi, indeks) => {
+            const tombol = document.createElement('button');
+            tombol.className = 'option-btn';
+            tombol.innerText = opsi;
+            tombol.onclick = () => cekJawaban(indeks);
+            containerOptions.appendChild(tombol);
+        });
+    }
+
+    function cekJawaban(indeksDipilih) {
+        let soalAktif = daftarSoal[indeksSekarang];
+        if (indeksDipilih === soalAktif.correct) {
+            totalSkor++;
+        }
+        indeksSekarang++;
+        tampilkanSoal();
+    }
+
+    function selesaiKuis() {
+        barProgress.style.width = '100%';
+        screenQuiz.classList.add('hidden');
+        screenResult.classList.remove('hidden');
+        
+        txtFinalScore.innerText = `${totalSkor} / ${daftarSoal.length}`;
+
+        // Memberikan evaluasi hasil/koreksi langsung
+        if (totalSkor >= 25) {
+            txtComment.innerText = "Luar Biasa! Logika dan kemampuan berpikirmu sudah sangat siap untuk masuk SMA Favorit.";
+        } else if (totalSkor >= 18) {
+            txtComment.innerText = "Bagus! Kamu punya dasar psikotes yang kuat, tingkatkan lagi ketelitianmu.";
+        } else {
+            txtComment.innerText = "Jangan berkecil hati. Coba ulangi kuis ini lagi untuk melatih pola pikirmu!";
+        }
+    }
+
+    function ulangKuis() {
+        indeksSekarang = 0;
+        totalSkor = 0;
+        screenResult.classList.add('hidden');
+        screenQuiz.classList.remove('hidden');
+        tampilkanSoal();
+    }
+
+    // Mulai kuis pertama kali saat web dibuka
+    tampilkanSoal();
+</script>
+
+</body>
+</html>
